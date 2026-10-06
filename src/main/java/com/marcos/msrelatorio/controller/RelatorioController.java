@@ -1,5 +1,6 @@
 package com.marcos.msrelatorio.controller;
 
+import com.marcos.msrelatorio.business.AnamneseService;
 import com.marcos.msrelatorio.business.QueixaPrincipalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class RelatorioController {
 
     private final QueixaPrincipalService queixaPrincipalService;
+    private final AnamneseService anamneseService;
 
     @PostMapping("/queixa-principal")
 
@@ -31,5 +33,17 @@ public class RelatorioController {
             throws Exception {
 
         return ResponseEntity.ok(queixaPrincipalService.geraQueixaPrincipal(criancaId, token));
+    }
+
+    @PostMapping("/anamnese")
+
+    @Operation(summary = "Gerar Histórico Clínico e Anamnese",
+            description = "Consome a transcrição do MS2 e gera a anamnese detalhada via ChatGPT")
+
+    public ResponseEntity<String> gerarAnamnese(
+            @RequestParam("criancaId") Long criancaId,
+            @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
+            throws Exception {
+        return ResponseEntity.ok(anamneseService.gerarAnamnese(criancaId, token));
     }
 }

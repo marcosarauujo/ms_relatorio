@@ -23,8 +23,8 @@ public class QueixaPrincipalService {
     private final AnamneseClient anamneseClient;
     private final ChatModel chatModel;
 
-    @Value("classpath:prompts/larissa-persona.md")
-    private Resource arquivoPersonaLArissa;
+    @Value("classpath:prompts/TO_larissa.md")
+    private Resource arquivoPersonaLarissa;
 
     public String geraQueixaPrincipal(Long criancaId, String token) throws Exception {
         CriancaResponseDTO crianca = coreClient.buscarCriancaPorId(criancaId, token);
@@ -36,7 +36,7 @@ public class QueixaPrincipalService {
                 .collect(Collectors.joining("\n\n")
                 );
 
-        String contextoLarissa = arquivoPersonaLArissa.getContentAsString(StandardCharsets.UTF_8);
+        String contextoLarissa = arquivoPersonaLarissa.getContentAsString(StandardCharsets.UTF_8);
 
         String prompt = montarQueixaPrincipal(crianca.getNomeCrianca(), contextoLarissa, historicoCompleto);
 

@@ -1,6 +1,8 @@
 package com.marcos.msrelatorio.controller;
 
 import com.marcos.msrelatorio.business.AnamneseService;
+import com.marcos.msrelatorio.business.ConclusaoService;
+import com.marcos.msrelatorio.business.DesafiosService;
 import com.marcos.msrelatorio.business.QueixaPrincipalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +23,8 @@ public class RelatorioController {
 
     private final QueixaPrincipalService queixaPrincipalService;
     private final AnamneseService anamneseService;
+    private final DesafiosService desafiosService;
+    private final ConclusaoService conclusaoService;
 
     @PostMapping("/queixa-principal")
 
@@ -32,7 +36,8 @@ public class RelatorioController {
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
 
-        return ResponseEntity.ok(queixaPrincipalService.geraQueixaPrincipal(criancaId, token));
+        return ResponseEntity.ok(queixaPrincipalService.geraQueixaPrincipal(criancaId, token)
+        );
     }
 
     @PostMapping("/anamnese")
@@ -44,6 +49,33 @@ public class RelatorioController {
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
-        return ResponseEntity.ok(anamneseService.gerarAnamnese(criancaId, token));
+        return ResponseEntity.ok(anamneseService.gerarAnamnese(criancaId, token)
+        );
+    }
+
+    @PostMapping("/desafios")
+
+    @Operation(summary = "Gerar Desafios e Participações",
+            description = "Gera o perfil sensorial e motor da criança")
+
+    public ResponseEntity<String> gerarDesafios(
+            @RequestParam("criancaId") Long criancaId,
+            @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
+            throws Exception {
+        return ResponseEntity.ok(desafiosService.gerarDesafios(criancaId, token)
+        );
+    }
+
+    @PostMapping("/conclusao")
+
+    @Operation(summary = "Gerar Conclusão e Objetivos",
+            description = "Gera a síntese clínica e os objetivos terapêuticos baseados no áudio")
+
+    public ResponseEntity<String> gerarConclusao(
+            @RequestParam("criancaId") Long criancaId,
+            @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
+            throws Exception {
+        return ResponseEntity.ok(conclusaoService.gerarConclusao(criancaId, token)
+        );
     }
 }

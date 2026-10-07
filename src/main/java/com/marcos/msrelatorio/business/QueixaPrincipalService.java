@@ -5,6 +5,10 @@ import com.marcos.msrelatorio.business.dto.TranscricaoResponseDTO;
 import com.marcos.msrelatorio.infrastructure.client.AnamneseClient;
 import com.marcos.msrelatorio.infrastructure.client.CoreClient;
 
+import com.marcos.msrelatorio.infrastructure.entity.RelatorioEntity;
+import com.marcos.msrelatorio.infrastructure.enums.TipoTopicoEnum;
+import com.marcos.msrelatorio.infrastructure.exceptions.TranscricaoNotFoundException;
+import com.marcos.msrelatorio.infrastructure.repository.RelatorioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +16,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,13 +27,19 @@ public class QueixaPrincipalService {
     private final CoreClient coreClient;
     private final AnamneseClient anamneseClient;
     private final ChatModel chatModel;
+    private final RelatorioRepository relatorioRepository;
 
     @Value("classpath:prompts/TO_larissa.md")
     private Resource arquivoPersonaLarissa;
 
     public String geraQueixaPrincipal(Long criancaId, String token) throws Exception {
+
         CriancaResponseDTO crianca = coreClient.buscarCriancaPorId(criancaId, token);
         List<TranscricaoResponseDTO> listaTranscricoes = anamneseClient.listarPorCrianca(criancaId, token);
+        if (listaTranscricoes.isEmpty()) {
+            throw new TranscricaoNotFoundException
+                    ("Não é possível gerar o relatório: Nenhuma transcrição de áudio foi encontrada para esta criança.");
+        }
 
 
         String historicoCompleto = listaTranscricoes.stream()
@@ -40,7 +51,19 @@ public class QueixaPrincipalService {
 
         String prompt = montarQueixaPrincipal(crianca.getNomeCrianca(), contextoLarissa, historicoCompleto);
 
-        return chatModel.call(prompt);
+        String textoGerado = chatModel.call(prompt);
+
+        RelatorioEntity relatorio = RelatorioEntity.builder()
+                .criancaId(criancaId)
+                .tipoTopicoEnum(TipoTopicoEnum.QUEIXA_PRINCIPAL)
+                .conteudo(textoGerado)
+                .dataCriacao(LocalDateTime.now())
+                .build();
+
+        relatorioRepository.save(relatorio);
+
+        return textoGerado;
+
     }
 
     private String montarQueixaPrincipal(String nomeCrianca, String contextoLarissa, String textoBruto) {
@@ -67,5 +90,6 @@ public class QueixaPrincipalService {
                 "%s"
                 """.formatted(contextoLarissa, nomeCrianca, textoBruto);
     }
+
 
 }

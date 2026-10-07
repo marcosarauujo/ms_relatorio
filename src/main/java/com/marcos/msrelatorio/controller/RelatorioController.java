@@ -4,13 +4,19 @@ import com.marcos.msrelatorio.business.AnamneseService;
 import com.marcos.msrelatorio.business.ConclusaoService;
 import com.marcos.msrelatorio.business.DesafiosService;
 import com.marcos.msrelatorio.business.QueixaPrincipalService;
+import com.marcos.msrelatorio.infrastructure.entity.RelatorioEntity;
+import com.marcos.msrelatorio.infrastructure.exceptions.RelatorioNotFoundException;
+import com.marcos.msrelatorio.infrastructure.repository.RelatorioRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,6 +31,8 @@ public class RelatorioController {
     private final AnamneseService anamneseService;
     private final DesafiosService desafiosService;
     private final ConclusaoService conclusaoService;
+    private final RelatorioRepository relatorioRepository;
+
 
     @PostMapping("/queixa-principal")
 
@@ -36,7 +44,8 @@ public class RelatorioController {
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
 
-        return ResponseEntity.ok(queixaPrincipalService.geraQueixaPrincipal(criancaId, token)
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                queixaPrincipalService.geraQueixaPrincipal(criancaId, token)
         );
     }
 
@@ -49,7 +58,8 @@ public class RelatorioController {
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
-        return ResponseEntity.ok(anamneseService.gerarAnamnese(criancaId, token)
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                anamneseService.gerarAnamnese(criancaId, token)
         );
     }
 
@@ -62,8 +72,9 @@ public class RelatorioController {
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
-        return ResponseEntity.ok(desafiosService.gerarDesafios(criancaId, token)
-        );
+        return ResponseEntity.status(HttpStatus.CREATED).body
+                (desafiosService.gerarDesafios(criancaId, token)
+                );
     }
 
     @PostMapping("/conclusao")
@@ -75,7 +86,37 @@ public class RelatorioController {
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
-        return ResponseEntity.ok(conclusaoService.gerarConclusao(criancaId, token)
+        return ResponseEntity.status(HttpStatus.CREATED).body
+                (conclusaoService.gerarConclusao(criancaId, token)
+                );
+    }
+
+    @GetMapping("/relatorios/crianca/{criancaId}")
+
+    @Operation(summary = "Listar relatórios por criança",
+            description = "Retorna todos os tópicos já gerados de uma criança")
+
+    public ResponseEntity<List<RelatorioEntity>> listarPorCrianca(
+            @PathVariable Long criancaId,
+            @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token) {
+
+        return ResponseEntity.ok(relatorioRepository.findByCriancaId(criancaId)
         );
     }
+
+    @GetMapping("/relatorio/{id}")
+
+    @Operation(summary = "Buscar relatório por ID",
+            description = "Retorna um tópico específico pelo seu ID")
+
+    public ResponseEntity<RelatorioEntity> buscarPorId(
+            @PathVariable String id,
+            @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token) {
+
+        return ResponseEntity.ok(relatorioRepository.findById(id)
+                .orElseThrow(() -> new RelatorioNotFoundException("Relatório não encontrado para o ID: " + id))
+        );
+    }
+
+
 }

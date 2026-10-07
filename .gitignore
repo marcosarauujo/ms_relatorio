@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Arquivos sensíveis — NUNCA devem ir para o GitHub!
+.env
+src/main/resources/application.properties

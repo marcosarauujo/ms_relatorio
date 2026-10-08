@@ -9,6 +9,7 @@ import com.marcos.msrelatorio.infrastructure.exceptions.RelatorioNotFoundExcepti
 import com.marcos.msrelatorio.infrastructure.repository.RelatorioRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/ia")
-
-@Tag(name = "Relatórios de IA", description = "Endpoints para gerar tópicos do documento clínico")
+@Tag(name = "Relatorios de IA", description = "Endpoints para gerar os topicos do documento clinico usando ChatGPT")
 @SecurityRequirement(name = "BearerAuth")
-
 public class RelatorioController {
 
     private final QueixaPrincipalService queixaPrincipalService;
@@ -33,12 +32,16 @@ public class RelatorioController {
     private final ConclusaoService conclusaoService;
     private final RelatorioRepository relatorioRepository;
 
-
     @PostMapping("/queixa-principal")
-
-    @Operation(summary = "Gerar Queixa Principal",
-            description = "Consome a transcrição do MS2 e gera a queixa principal via ChatGPT")
-
+    @Operation(
+            summary = "Gerar Queixa Principal",
+            description = "Busca todas as transcricoes do paciente, envia para o ChatGPT " +
+                    "e gera o topico de Queixa Principal do relatorio clinico."
+    )
+    @ApiResponse(responseCode = "201", description = "Topico de Queixa Principal gerado e salvo com sucesso.")
+    @ApiResponse(responseCode = "401", description = "Token JWT invalido ou ausente.")
+    @ApiResponse(responseCode = "404", description = "Nenhuma transcricao encontrada para esta crianca. Faca o upload de audio antes.")
+    @ApiResponse(responseCode = "500", description = "Erro ao se comunicar com a API do ChatGPT. Verifique a chave da OpenAI.")
     public ResponseEntity<String> queixaPrincipal(
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
@@ -50,73 +53,98 @@ public class RelatorioController {
     }
 
     @PostMapping("/anamnese")
-
-    @Operation(summary = "Gerar Histórico Clínico e Anamnese",
-            description = "Consome a transcrição do MS2 e gera a anamnese detalhada via ChatGPT")
-
+    @Operation(
+            summary = "Gerar Historico Clinico e Anamnese",
+            description = "Busca todas as transcricoes do paciente, envia para o ChatGPT " +
+                    "e gera o topico de Anamnese detalhada do relatorio clinico."
+    )
+    @ApiResponse(responseCode = "201", description = "Topico de Anamnese gerado e salvo com sucesso.")
+    @ApiResponse(responseCode = "401", description = "Token JWT invalido ou ausente.")
+    @ApiResponse(responseCode = "404", description = "Nenhuma transcricao encontrada para esta crianca. Faca o upload de audio antes.")
+    @ApiResponse(responseCode = "500", description = "Erro ao se comunicar com a API do ChatGPT. Verifique a chave da OpenAI.")
     public ResponseEntity<String> gerarAnamnese(
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
+
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 anamneseService.gerarAnamnese(criancaId, token)
         );
     }
 
     @PostMapping("/desafios")
-
-    @Operation(summary = "Gerar Desafios e Participações",
-            description = "Gera o perfil sensorial e motor da criança")
+    @Operation(
+            summary = "Gerar Desafios e Participacoes",
+            description = "Busca todas as transcricoes do paciente, envia para o ChatGPT " +
+                    "e gera o topico de Desafios e Perfil Sensorial/Motor do relatorio clinico."
+    )
+    @ApiResponse(responseCode = "201", description = "Topico de Desafios gerado e salvo com sucesso.")
+    @ApiResponse(responseCode = "401", description = "Token JWT invalido ou ausente.")
+    @ApiResponse(responseCode = "404", description = "Nenhuma transcricao encontrada para esta crianca. Faca o upload de audio antes.")
+    @ApiResponse(responseCode = "500", description = "Erro ao se comunicar com a API do ChatGPT. Verifique a chave da OpenAI.")
 
     public ResponseEntity<String> gerarDesafios(
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
-        return ResponseEntity.status(HttpStatus.CREATED).body
-                (desafiosService.gerarDesafios(criancaId, token)
-                );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                desafiosService.gerarDesafios(criancaId, token)
+        );
     }
 
     @PostMapping("/conclusao")
-
-    @Operation(summary = "Gerar Conclusão e Objetivos",
-            description = "Gera a síntese clínica e os objetivos terapêuticos baseados no áudio")
+    @Operation(
+            summary = "Gerar Conclusao e Objetivos Terapeuticos",
+            description = "Busca todas as transcricoes do paciente, envia para o ChatGPT " +
+                    "e gera a sintese clinica com os objetivos terapeuticos."
+    )
+    @ApiResponse(responseCode = "201", description = "Topico de Conclusao gerado e salvo com sucesso.")
+    @ApiResponse(responseCode = "401", description = "Token JWT invalido ou ausente.")
+    @ApiResponse(responseCode = "404", description = "Nenhuma transcricao encontrada para esta crianca. Faca o upload de audio antes.")
+    @ApiResponse(responseCode = "500", description = "Erro ao se comunicar com a API do ChatGPT. Verifique a chave da OpenAI.")
 
     public ResponseEntity<String> gerarConclusao(
             @RequestParam("criancaId") Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token)
             throws Exception {
-        return ResponseEntity.status(HttpStatus.CREATED).body
-                (conclusaoService.gerarConclusao(criancaId, token)
-                );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                conclusaoService.gerarConclusao(criancaId, token)
+        );
     }
 
     @GetMapping("/relatorios/crianca/{criancaId}")
-
-    @Operation(summary = "Listar relatórios por criança",
-            description = "Retorna todos os tópicos já gerados de uma criança")
+    @Operation(
+            summary = "Listar relatorios por crianca",
+            description = "Retorna todos os topicos de relatorio ja gerados para um determinado paciente, " +
+                    "incluindo tipo do topico, conteudo e data de criacao."
+    )
+    @ApiResponse(responseCode = "200", description = "Lista de relatorios retornada com sucesso.")
+    @ApiResponse(responseCode = "401", description = "Token JWT invalido ou ausente.")
+    @ApiResponse(responseCode = "404", description = "Nenhum relatorio encontrado para esta crianca.")
 
     public ResponseEntity<List<RelatorioEntity>> listarPorCrianca(
             @PathVariable Long criancaId,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token) {
 
-        return ResponseEntity.ok(relatorioRepository.findByCriancaId(criancaId)
-        );
+        return ResponseEntity.ok(relatorioRepository.findByCriancaId(criancaId));
     }
 
     @GetMapping("/relatorio/{id}")
-
-    @Operation(summary = "Buscar relatório por ID",
-            description = "Retorna um tópico específico pelo seu ID")
-
+    @Operation(
+            summary = "Buscar relatorio por ID",
+            description = "Retorna um topico especifico de relatorio pelo seu ID do MongoDB (string hexadecimal)."
+    )
+    @ApiResponse(responseCode = "200", description = "Relatorio encontrado com sucesso.")
+    @ApiResponse(responseCode = "401", description = "Token JWT invalido ou ausente.")
+    @ApiResponse(responseCode = "404", description = "Nenhum relatorio encontrado para o ID informado.")
     public ResponseEntity<RelatorioEntity> buscarPorId(
             @PathVariable String id,
             @Parameter(hidden = true) @RequestHeader(name = "Authorization", required = false) String token) {
 
         return ResponseEntity.ok(relatorioRepository.findById(id)
-                .orElseThrow(() -> new RelatorioNotFoundException("Relatório não encontrado para o ID: " + id))
+                .orElseThrow(() -> new RelatorioNotFoundException("Relatorio nao encontrado para o ID: " + id))
         );
     }
-
-
 }

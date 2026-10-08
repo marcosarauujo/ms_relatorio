@@ -13,13 +13,20 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @JsonFormat
+
 public class RelatorioEntity {
     @Id
     private String id;
+
     private Long criancaId;
+    private String nomeCrianca;
+
     private Long terapeutaId;
+    private String nomeTerapeuta;
+
     private TipoTopicoEnum tipoTopicoEnum;
     private String conteudo;
+
     @JsonFormat(pattern = "HH:mm:ss dd/MM/yyyy")
     private LocalDateTime dataCriacao;
 }

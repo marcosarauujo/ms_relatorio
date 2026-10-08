@@ -1,6 +1,7 @@
 package com.marcos.msrelatorio.business;
 
 import com.marcos.msrelatorio.business.dto.CriancaResponseDTO;
+import com.marcos.msrelatorio.business.dto.TerapeutaResponseDTO;
 import com.marcos.msrelatorio.business.dto.TranscricaoResponseDTO;
 import com.marcos.msrelatorio.infrastructure.client.AnamneseClient;
 import com.marcos.msrelatorio.infrastructure.client.CoreClient;
@@ -37,6 +38,7 @@ public class ConclusaoService {
     public String gerarConclusao(Long criancaId, String token) throws Exception {
 
         CriancaResponseDTO crianca = coreClient.buscarCriancaPorId(criancaId, token);
+        TerapeutaResponseDTO terapeuta = coreClient.buscarPerfilTerapeuta(token);
         List<TranscricaoResponseDTO> listaTranscricoes = anamneseClient.listarPorCrianca(criancaId, token);
         if (listaTranscricoes.isEmpty()) {
             throw new TranscricaoNotFoundException
@@ -57,6 +59,9 @@ public class ConclusaoService {
 
         RelatorioEntity relatorio = RelatorioEntity.builder()
                 .criancaId(criancaId)
+                .nomeCrianca(crianca.getNomeCrianca())
+                .terapeutaId(terapeuta.getId())
+                .nomeTerapeuta(terapeuta.getNomeTerapeuta())
                 .tipoTopicoEnum(TipoTopicoEnum.CONCLUSAO)
                 .conteudo(textoGerado)
                 .dataCriacao(LocalDateTime.now())
